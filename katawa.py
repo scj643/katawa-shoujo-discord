@@ -35,17 +35,18 @@ def rpc_process(conn, routes):
             rpc_route = routes[current_route]
             rpc.update(details=rpc_route['details'], large_image=rpc_route['image'], small_image=large_icon,
                        large_text=rpc_route['details'], start=start_time, state="Act: {}".format(current_act))
-        time.sleep(5)  # Can only update rich presence every 15 seconds
-        received = conn.recv()
-        if received[0]:
-            current_route = received[0]
-        if received[1]:
-            current_act = received[1]
+        if conn.poll(5):
+            received = conn.recv()
+            if received[0]:
+                current_route = received[0]
+            if received[1]:
+                current_act = received[1]
 
 
 if __name__ == '__main__':
     parent_conn, child_conn = Pipe(duplex=False)
     p = Process(target=rpc_process, args=(parent_conn, route_dict,))
+    p.daemon = True
     p.start()
     print("Available routes")
     for i in route_dict.keys():
@@ -54,3 +55,4 @@ if __name__ == '__main__':
         route = input("New Route: ")
         act = input("Act?: ")
         child_conn.send((route, act))
+        time.sleep(5)
