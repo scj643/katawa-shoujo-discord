@@ -16,6 +16,7 @@ def rpc_process(conn, routes):
     client_id = "545357282880389141"  # Put your Client ID in here
     rpc = Presence(client_id)  # Initialize the Presence client
     current_route = "hanako"
+    current_act = '1'
     connected = False
     while not connected:
         try:
@@ -33,11 +34,13 @@ def rpc_process(conn, routes):
         if current_route in routes.keys():
             rpc_route = routes[current_route]
             rpc.update(details=rpc_route['details'], large_image=rpc_route['image'], small_image=large_icon,
-                       large_text=rpc_route['details'], start=start_time, state="In Game")
+                       large_text=rpc_route['details'], start=start_time, state="Act: {}".format(current_act))
         time.sleep(5)  # Can only update rich presence every 15 seconds
         received = conn.recv()
-        if received:
-            current_route = received
+        if received[0]:
+            current_route = received[0]
+        if received[1]:
+            current_act = received[1]
 
 
 if __name__ == '__main__':
@@ -49,4 +52,5 @@ if __name__ == '__main__':
         print(i)
     while True:
         route = input("New Route: ")
-        child_conn.send(route)
+        act = input("Act?: ")
+        child_conn.send((route, act))
